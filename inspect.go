@@ -23,6 +23,7 @@ func init() {
 // inspects the current request.
 type Middleware struct {
 	logger *zap.Logger
+	ctx    caddy.Context
 }
 
 // CaddyModule returns the Caddy module information.
@@ -36,6 +37,7 @@ func (Middleware) CaddyModule() caddy.ModuleInfo {
 // Provision implements caddy.Provisioner.
 func (m *Middleware) Provision(ctx caddy.Context) error {
 	m.logger = ctx.Logger()
+	m.ctx = ctx
 	return nil
 }
 
@@ -59,11 +61,12 @@ type Details struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	} `json:"basic_auth"`
-	Cookies []*http.Cookie `json:"cookies"`
-	Modules []string       `json:"modules"`
+	Cookies       []*http.Cookie `json:"cookies"`
+	ActiveModules []string       `json:"active_modules"`
+	LoadedModules []string       `json:"loaded_modules"`
 }
 
-func detailsFromRequest(r *http.Request) (d Details) {
+func (m *Middleware) detailsFromRequest(r *http.Request) (d Details) {
 	d.URL = r.URL.String()
 	d.Method = r.Method
 	d.Host = r.Host
@@ -77,8 +80,9 @@ func detailsFromRequest(r *http.Request) (d Details) {
 	d.ContentLength = r.ContentLength
 	d.Cookies = r.Cookies()
 
-	for _, m := range caddy.ActiveContext().Modules() {
-		d.Modules = append(d.Modules, m.CaddyModule().String())
+	d.LoadedModules = caddy.Modules()
+	for _, m := range m.ctx.Modules() {
+		d.ActiveModules = append(d.ActiveModules, m.CaddyModule().String())
 	}
 
 	return
@@ -91,7 +95,7 @@ func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddy
 
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", " ")
-	encoder.Encode(detailsFromRequest(r))
+	encoder.Encode(m.detailsFromRequest(r))
 
 	return next.ServeHTTP(w, r)
 }
