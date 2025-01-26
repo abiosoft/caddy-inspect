@@ -1,10 +1,8 @@
 package inspect
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -24,6 +22,7 @@ func init() {
 type Middleware struct {
 	logger *zap.Logger
 	ctx    caddy.Context
+	server *Server
 }
 
 // CaddyModule returns the Caddy module information.
@@ -38,6 +37,15 @@ func (Middleware) CaddyModule() caddy.ModuleInfo {
 func (m *Middleware) Provision(ctx caddy.Context) error {
 	m.logger = ctx.Logger()
 	m.ctx = ctx
+
+	m.server = &Server{logger: m.logger, clear: make(chan struct{})}
+
+	port, err := m.server.start()
+	if err != nil {
+		return fmt.Errorf("error occured during provision: %w", err)
+	}
+
+	m.logger.Info(fmt.Sprintf("inspect console available at http://127.0.0.1:%d", port))
 	return nil
 }
 
@@ -46,7 +54,7 @@ func (m *Middleware) Validate() error {
 	return nil
 }
 
-type Details struct {
+type Request struct {
 	URL           string      `json:"url"`
 	Host          string      `json:"host"`
 	Method        string      `json:"method"`
@@ -66,7 +74,7 @@ type Details struct {
 	LoadedModules []string       `json:"loaded_modules"`
 }
 
-func (m *Middleware) detailsFromRequest(r *http.Request) (d Details) {
+func (m *Middleware) fromHttpRequest(r *http.Request) (d Request) {
 	d.URL = r.URL.String()
 	d.Method = r.Method
 	d.Host = r.Host
@@ -90,12 +98,10 @@ func (m *Middleware) detailsFromRequest(r *http.Request) (d Details) {
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
 func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
-	m.logger.Log(zap.InfoLevel, "the request is being inspected")
-	time.Sleep(1 * time.Second)
+	m.logger.Info("a request is being inspected")
 
-	encoder := json.NewEncoder(os.Stdout)
-	encoder.SetIndent("", " ")
-	encoder.Encode(m.detailsFromRequest(r))
+	request := m.fromHttpRequest(r)
+	m.server.handle(request)
 
 	return next.ServeHTTP(w, r)
 }
