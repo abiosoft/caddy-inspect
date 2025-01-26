@@ -2,4 +2,5 @@
 
 route {
 	inspect
+	respond "Hello from caddy server"
 }
