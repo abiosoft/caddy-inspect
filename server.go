@@ -92,7 +92,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(`<h1>Hello over there</h1>`))
+	w.Write(htmlContent)
 }
 
 var _ http.Handler = (*Server)(nil)
