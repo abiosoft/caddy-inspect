@@ -6,14 +6,16 @@ import (
 	"net"
 	"net/http"
 	"sync"
+	"time"
 
 	"go.uber.org/zap"
 )
 
 type Server struct {
-	request *Request
-	logger  *zap.Logger
-	err     error
+	request   *Request
+	requestID int64
+	logger    *zap.Logger
+	err       error
 
 	clear chan struct{}
 
@@ -51,6 +53,7 @@ func (s *Server) handle(r Request) {
 
 	s.requestMutex.Lock()
 	s.request = &r
+	s.requestID = time.Now().UnixNano()
 	s.requestMutex.Unlock()
 
 	<-s.clear
@@ -83,10 +86,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		var response struct {
 			HasRequest bool     `json:"has_request"`
 			Request    *Request `json:"request,omitempty"`
+			ID         int64    `json:"id"`
 		}
 
 		response.HasRequest = s.hasRequest()
 		response.Request = s.request
+		response.ID = s.requestID
 
 		if err := writeJson(w, response); err != nil {
 			s.logger.Error("error writing http response", zap.Error(err))

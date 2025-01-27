@@ -12,6 +12,7 @@
             --border-color: #ddd;
             --button-bg-color: #007bff;
             --button-hover-bg-color: #0056b3;
+            --button-active-bg-color: #004085;
             --textarea-bg-color: #f9f9f9;
             --input-focus-border-color: #007bff;
             --input-focus-shadow-color: rgba(0, 123, 255, 0.5);
@@ -24,6 +25,7 @@
                 --border-color: #333;
                 --button-bg-color: #1a73e8;
                 --button-hover-bg-color: #135ba1;
+                --button-active-bg-color: #0e447a;
                 --textarea-bg-color: #1e1e1e;
                 --input-focus-border-color: #1a73e8;
                 --input-focus-shadow-color: rgba(26, 115, 232, 0.5);
@@ -70,10 +72,15 @@
             background-color: var(--button-hover-bg-color);
         }
 
+        button:active {
+            background-color: var(--button-active-bg-color);
+            transform: translateY(1px);
+        }
+
         textarea {
             width: 100%;
             height: 300px;
-            font-family: "Courier New", Courier, monospace;
+            font-family: monospace;
             font-size: 14px;
             padding: 10px;
             margin-bottom: 20px;
@@ -118,6 +125,47 @@
             font-size: 20px;
             color: var(--text-color);
         }
+
+        .json-tree {
+            font-family: monospace;
+            font-size: 15px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--textarea-bg-color);
+            color: var(--text-color);
+        }
+
+        .json-key {
+            font-weight: bold;
+            text-transform: capitalize;
+            padding: 10px;
+        }
+
+        .json-collapsible {
+            cursor: pointer;
+            text-transform: capitalize;
+            padding: 10px;
+        }
+
+        .json-collapsible::before {
+            content: '\25B6';
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .json-collapsible.expanded::before {
+            content: '\25BC';
+        }
+
+        .json-content {
+            display: none;
+            padding-left: 20px;
+        }
+
+        .json-content.expanded {
+            display: block;
+        }
     </style>
 </head>
 
@@ -127,32 +175,34 @@
         <div class="top-row">
             <button id="resumeButton">Resume</button>
         </div>
-        <div class="input-row">
+        <!-- <div class="input-row">
             <label for="filter">Filter</label>
             <input type="text" id="filter" placeholder="Filter with jq syntax...">
+        </div> -->
+        <div id="jsonTree" class="json-tree">
+            <!-- JSON tree will be rendered here -->
         </div>
-        <textarea readonly id="requestDetails">
-// Your code output will appear here...
-        </textarea>
     </div>
 
     <script>
         const loadingElement = document.getElementById('loading');
         const contentElement = document.getElementById('content');
-        const requestDetailsElement = document.getElementById('requestDetails');
         const resumeButtonElement = document.getElementById('resumeButton');
+        const jsonTreeElement = document.getElementById('jsonTree');
+        let currentRequestID = 0;
 
         async function fetchRequests() {
             try {
                 const response = await fetch('/request');
                 if (response.ok) {
-                    console.log("response", response)
                     const data = await response.json();
-                    console.log("data", data)
                     if (data.has_request) {
-                        loadingElement.style.display = 'none';
-                        contentElement.style.display = 'block';
-                        requestDetailsElement.innerHTML = JSON.stringify(data.request, null, 2)
+                        if (currentRequestID != data.id) {
+                            currentRequestID = data.id;
+                            loadingElement.style.display = 'none';
+                            contentElement.style.display = 'block';
+                            renderJsonTree(data.request, jsonTreeElement);
+                        }
                     } else {
                         loadingElement.style.display = 'flex';
                         contentElement.style.display = 'none';
@@ -170,10 +220,11 @@
                 const response = await fetch('/', {
                     method: 'POST'
                 });
-                if (!response.ok) {
-                    console.error('Error sending resume request:', response.status);
-                } else {
+                if (response.ok) {
+                    fetchRequests()
                     console.log('Resume request sent successfully');
+                } else {
+                    console.error('Error sending resume request:', response.status);
                 }
             } catch (error) {
                 console.error('Error sending resume request:', error);
@@ -181,6 +232,41 @@
         }
 
         resumeButtonElement.addEventListener('click', sendResumeRequest);
+
+        function renderJsonTree(data, container) {
+            container.innerHTML = '';
+
+            function createTreeElement(key, value) {
+                const element = document.createElement('div');
+                if (typeof value === 'object' && value !== null) {
+                    const collapsible = document.createElement('div');
+                    collapsible.className = 'json-collapsible';
+                    collapsible.textContent = key;
+
+                    const content = document.createElement('div');
+                    content.className = 'json-content';
+
+                    for (const [childKey, childValue] of Object.entries(value)) {
+                        content.appendChild(createTreeElement(childKey, childValue));
+                    }
+
+                    collapsible.addEventListener('click', () => {
+                        collapsible.classList.toggle('expanded');
+                        content.classList.toggle('expanded');
+                    });
+
+                    element.appendChild(collapsible);
+                    element.appendChild(content);
+                } else {
+                    element.innerHTML = `<span class="json-key">${key}:</span> ${value}`;
+                }
+                return element;
+            }
+
+            for (const [key, value] of Object.entries(data)) {
+                container.appendChild(createTreeElement(key, value));
+            }
+        }
 
         setInterval(fetchRequests, 1000);
     </script>
