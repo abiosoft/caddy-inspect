@@ -67,6 +67,7 @@ func writeJson(w http.ResponseWriter, body any) error {
 
 // ServeHTTP implements http.Handler.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// post requests
 	if r.Method == http.MethodPost {
 		if s.hasRequest() {
 			s.clear <- struct{}{}
@@ -77,6 +78,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// handle /request
 	if r.URL.Path == "/request" {
 		var response struct {
 			HasRequest bool     `json:"has_request"`
@@ -92,6 +94,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// all other endpoints
 	w.Write(htmlContent)
 }
 

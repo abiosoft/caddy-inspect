@@ -43,10 +43,10 @@
             max-width: 800px;
             margin: 20px auto;
             padding: 20px;
-            border: 1px solid var(--border-color);
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             background-color: var(--bg-color);
+            display: none;
         }
 
         .top-row {
@@ -109,22 +109,81 @@
             border-color: var(--input-focus-border-color);
             box-shadow: 0 0 4px var(--input-focus-shadow-color);
         }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-size: 20px;
+            color: var(--text-color);
+        }
     </style>
 </head>
 
 <body>
-    <div class="container">
+    <div class="loading" id="loading">Waiting for request...</div>
+    <div class="container" id="content">
         <div class="top-row">
-            <button>Resume</button>
+            <button id="resumeButton">Resume</button>
         </div>
         <div class="input-row">
             <label for="filter">Filter</label>
-            <input type="text" id="filter" placeholder="Type to filter with jquery syntax">
+            <input type="text" id="filter" placeholder="Filter with jq syntax...">
         </div>
-        <textarea readonly>
+        <textarea readonly id="requestDetails">
 // Your code output will appear here...
         </textarea>
     </div>
+
+    <script>
+        const loadingElement = document.getElementById('loading');
+        const contentElement = document.getElementById('content');
+        const requestDetailsElement = document.getElementById('requestDetails');
+        const resumeButtonElement = document.getElementById('resumeButton');
+
+        async function fetchRequests() {
+            try {
+                const response = await fetch('/request');
+                if (response.ok) {
+                    console.log("response", response)
+                    const data = await response.json();
+                    console.log("data", data)
+                    if (data.has_request) {
+                        loadingElement.style.display = 'none';
+                        contentElement.style.display = 'block';
+                        requestDetailsElement.innerHTML = JSON.stringify(data.request, null, 2)
+                    } else {
+                        loadingElement.style.display = 'flex';
+                        contentElement.style.display = 'none';
+                    }
+                } else {
+                    console.error('Error fetching requests:', response.status);
+                }
+            } catch (error) {
+                console.error('Error fetching requests:', error);
+            }
+        }
+
+        async function sendResumeRequest() {
+            try {
+                const response = await fetch('/', {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    console.error('Error sending resume request:', response.status);
+                } else {
+                    console.log('Resume request sent successfully');
+                }
+            } catch (error) {
+                console.error('Error sending resume request:', error);
+            }
+        }
+
+        resumeButtonElement.addEventListener('click', sendResumeRequest);
+
+        setInterval(fetchRequests, 1000);
+    </script>
 </body>
 
 </html>
