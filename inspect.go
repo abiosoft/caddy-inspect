@@ -55,23 +55,23 @@ func (m *Middleware) Validate() error {
 }
 
 type Request struct {
-	URL           string      `json:"url"`
-	Host          string      `json:"host"`
-	Method        string      `json:"method"`
-	Headers       http.Header `json:"headers"`
-	RemoteAddress string      `json:"remote_address"`
-	Form          string      `json:"form"`
-	Proto         string      `json:"proto"`
-	UserAgent     string      `json:"user_agent"`
-	Referer       string      `json:"referer"`
-	ContentLength int64       `json:"content_length"`
-	BasicAuth     struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	} `json:"basic_auth"`
-	Cookies       []*http.Cookie `json:"cookies"`
-	ActiveModules []string       `json:"active_modules"`
-	LoadedModules []string       `json:"loaded_modules"`
+	URL           string      `json:"url,omitempty"`
+	Host          string      `json:"host,omitempty"`
+	Method        string      `json:"method,omitempty"`
+	Headers       http.Header `json:"headers,omitempty"`
+	RemoteAddress string      `json:"remote_address,omitempty"`
+	Form          string      `json:"form,omitempty"`
+	Proto         string      `json:"proto,omitempty"`
+	UserAgent     string      `json:"user_agent,omitempty"`
+	Referer       string      `json:"referer,omitempty"`
+	ContentLength int64       `json:"content_length,omitempty"`
+	BasicAuth     *struct {
+		Username string `json:"username,omitempty"`
+		Password string `json:"password,omitempty"`
+	} `json:"basic_auth,omitempty"`
+	Cookies       []*http.Cookie `json:"cookies,omitempty"`
+	ActiveModules []string       `json:"active_modules,omitempty"`
+	LoadedModules []string       `json:"loaded_modules,omitempty"`
 }
 
 func (m *Middleware) fromHttpRequest(r *http.Request) (d Request) {
@@ -84,9 +84,16 @@ func (m *Middleware) fromHttpRequest(r *http.Request) (d Request) {
 	d.Proto = r.Proto
 	d.UserAgent = r.UserAgent()
 	d.Referer = r.Referer()
-	d.BasicAuth.Username, d.BasicAuth.Password, _ = r.BasicAuth()
 	d.ContentLength = r.ContentLength
 	d.Cookies = r.Cookies()
+
+	username, password, _ := r.BasicAuth()
+	if username != "" || password != "" {
+		d.BasicAuth = &struct {
+			Username string `json:"username,omitempty"`
+			Password string `json:"password,omitempty"`
+		}{Username: username, Password: password}
+	}
 
 	d.LoadedModules = caddy.Modules()
 	for _, m := range m.ctx.Modules() {
