@@ -17,6 +17,16 @@
         clearInterval(intervalId);
     });
 
+    function snakeToTitleCase(str) {
+        return str
+            .split("_")
+            .map(
+                (word) =>
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+            )
+            .join(" ");
+    }
+
     async function fetchRequests() {
         const response = await fetch("http://192.168.106.19:2020/request");
         if (!response.ok) {
@@ -24,7 +34,6 @@
         }
 
         const data = await response.json();
-        console.log("fetching request...", data);
         if (!data.has_request) {
             treeData = [];
             return;
@@ -43,9 +52,6 @@
         });
         if (response.ok) {
             fetchRequests();
-            console.log("Resume request sent successfully");
-        } else {
-            console.error("Error sending resume request:", response.status);
         }
     }
 </script>
@@ -60,7 +66,7 @@
 
         <div class="tree json-tree">
             {#each treeData as [key, node]}
-                <Node {key} {node} />
+                <Node key={snakeToTitleCase(key)} {node} />
             {/each}
         </div>
     </div>

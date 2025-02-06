@@ -87,6 +87,7 @@
         margin-right: 10px;
         font-family: monospace;
         padding: 5px;
+        font-weight: bold;
     }
 
     .value,
