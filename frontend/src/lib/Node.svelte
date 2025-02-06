@@ -35,14 +35,7 @@
         {/if}
         <div class="key-value-container">
             {#if itemIsArray}
-                <span>
-                    &bullet;
-                    <input
-                        class="value-only"
-                        value={node}
-                        readonly="readonly"
-                    />
-                </span>
+                <input class="value-only" value={node} readonly="readonly" />
             {:else}
                 <span class="key">{key}</span>
                 {#if !hasChildren}
@@ -109,8 +102,10 @@
         border-radius: 4px;
     }
 
-    .value-only {
-        flex: 1;
+    /* Make .value-only take full width if it is the only child */
+    .key-value-container:has(.value-only):not(:has(.key)) .value-only {
+        flex: 1 1 100%;
+        margin-left: 0; /* Remove left margin when alone */
     }
 
     .children {
