@@ -65,6 +65,7 @@ func (s *Server) handle(r Request) {
 
 func writeJson(w http.ResponseWriter, body any) error {
 	w.Header().Add("content-type", "application/json")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
 	return json.NewEncoder(w).Encode(body)
 }
 
