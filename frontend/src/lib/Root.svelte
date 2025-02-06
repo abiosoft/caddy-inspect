@@ -4,6 +4,7 @@
 
     let treeData = $state([]);
     let hasData = $derived(treeData.length > 0);
+    let requestUrl = $state("");
 
     let intervalId = $state(0);
     let currentRequestId = $state(0);
@@ -36,6 +37,7 @@
         const data = await response.json();
         if (!data.has_request) {
             treeData = [];
+            document.title = "Caddy Inspect";
             return;
         }
         if (currentRequestId == data.id) {
@@ -44,6 +46,10 @@
 
         currentRequestId = data.id;
         treeData = Object.entries(data.request);
+        requestUrl = data.request.url;
+
+        window.focus();
+        document.title = "Caddy Inspect - " + requestUrl;
     }
 
     async function resumeRequest() {
@@ -54,13 +60,27 @@
             fetchRequests();
         }
     }
+    async function stopRequest() {
+        const response = await fetch("http://192.168.106.19:2020", {
+            method: "POST",
+        });
+        if (response.ok) {
+            fetchRequests();
+        }
+    }
 </script>
 
-{#if hasData}
-    <div class="container" id="content">
+<div class="container" id="content">
+    <div class="header">Caddy Inspect</div>
+    <hr />
+    <br />
+    {#if hasData}
         <div class="top-row">
             <button id="resumeButton" onclick={resumeRequest}
                 >Resume &#9658;
+            </button>
+            <button id="stopButton" class="danger" onclick={stopRequest}
+                >Stop &#9632;
             </button>
         </div>
 
@@ -69,10 +89,10 @@
                 <Node key={snakeToTitleCase(key)} {node} />
             {/each}
         </div>
-    </div>
-{:else}
-    <div class="loading" id="loading">Waiting for request...</div>
-{/if}
+    {:else}
+        <div class="loading" id="loading">Waiting for request...</div>
+    {/if}
+</div>
 
 <style>
     .tree {

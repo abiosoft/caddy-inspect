@@ -5,6 +5,8 @@
   --button-bg-color: #007bff;
   --button-hover-bg-color: #0056b3;
   --button-active-bg-color: #004085;
+  --button-danger-color: #c73636;
+  --button-hover-danger-color: #a62d2d;
   --textarea-bg-color: #f9f9f9;
   --input-focus-border-color: #007bff;
   --input-focus-shadow-color: rgba(0, 123, 255, 0.5);
@@ -18,6 +20,8 @@
     --button-bg-color: #1a73e8;
     --button-hover-bg-color: #135ba1;
     --button-active-bg-color: #0e447a;
+    --button-danger-color: #a0222f;
+    --button-hover-danger-color: #881c28;
     --textarea-bg-color: #1e1e1e;
     --input-focus-border-color: #1a73e8;
     --input-focus-shadow-color: rgba(26, 115, 232, 0.5);
@@ -49,6 +53,20 @@ body {
   margin-bottom: 20px;
 }
 
+.header {
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.inspect {
+  padding: 10px;
+}
+
 button {
   padding: 10px 20px;
   font-size: 16px;
@@ -67,6 +85,15 @@ button:active {
   background-color: var(--button-active-bg-color);
   transform: translateY(1px);
 }
+
+button.danger {
+  background-color: var(--button-danger-color);
+}
+
+button.danger:hover {
+  background-color: var(--button-hover-danger-color);
+}
+
 
 textarea {
   width: 100%;
@@ -112,7 +139,7 @@ input[type="text"]:focus {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: 30vh;
   font-size: 20px;
   color: var(--text-color);
 }
