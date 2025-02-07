@@ -73,7 +73,9 @@
 </script>
 
 <div class="container" id="content">
-    <div class="header">Caddy Inspect</div>
+    <div class="header">
+        <img class="logo" alt="Caddy logo" /> <span>Inspect</span>
+    </div>
     <hr />
     <br />
     {#if hasData}

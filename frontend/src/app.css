@@ -12,6 +12,12 @@
   --input-focus-shadow-color: rgba(0, 123, 255, 0.5);
 }
 
+.logo {
+  content: url("/assets/logo-light.svg");
+  height: 30px;
+  margin-right: 5px;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-color: #121212;
@@ -26,6 +32,11 @@
     --input-focus-border-color: #1a73e8;
     --input-focus-shadow-color: rgba(26, 115, 232, 0.5);
   }
+
+  .logo {
+    content: url("/assets/logo-dark.svg");
+  }
+
 }
 
 body {
