@@ -3,16 +3,16 @@ package inspect
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/caddyserver/caddy/v2"
 	"go.uber.org/zap"
 )
 
 type Server struct {
-	request   *Request
+	request   *Response
 	requestID int64
 	logger    *zap.Logger
 	err       error
@@ -27,6 +27,7 @@ type requestAction = int
 
 const (
 	requestActionResume requestAction = iota
+	requestActionStep
 	requestActionStop
 )
 
@@ -35,6 +36,13 @@ func (s *Server) hasRequest() bool {
 	defer s.requestMutex.RUnlock()
 
 	return s.request != nil
+}
+
+func (s *Server) hasResponse() bool {
+	s.requestMutex.RLock()
+	defer s.requestMutex.RUnlock()
+
+	return s.request != nil && s.request.responseMode
 }
 
 func (s *Server) start() (port int, err error) {
@@ -54,12 +62,14 @@ func (s *Server) start() (port int, err error) {
 	return port, nil
 }
 
-func (s *Server) handle(r Request) requestAction {
+func (s *Server) handle(ctx caddy.Context, w http.ResponseWriter, r *http.Request) requestAction {
 	s.handlerMutex.Lock()
 	defer s.handlerMutex.Unlock()
 
+	request := buildResponse(ctx, w, r)
+
 	s.requestMutex.Lock()
-	s.request = &r
+	s.request = &request
 	s.requestID = time.Now().UnixNano()
 	s.requestMutex.Unlock()
 
@@ -83,9 +93,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// post requests
 	// resume and stop
 	if r.Method == http.MethodPost {
-		action := requestActionResume
-		if r.URL.Path == "/stop" {
+		var action requestAction
+
+		switch r.URL.Path {
+		case "/stop":
 			action = requestActionStop
+		case "/step":
+			action = requestActionStep
+		default:
+			action = requestActionResume
 		}
 
 		if s.hasRequest() {
@@ -101,12 +117,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// handle /request
 	if r.URL.Path == "/request" {
 		var response struct {
-			HasRequest bool     `json:"has_request"`
-			Request    *Request `json:"request,omitempty"`
-			ID         int64    `json:"id"`
+			HasRequest  bool      `json:"has_request"`
+			HasResponse bool      `json:"has_response"`
+			Request     *Response `json:"request,omitempty"`
+			ID          int64     `json:"id"`
 		}
 
 		response.HasRequest = s.hasRequest()
+		response.HasResponse = s.hasResponse()
 		response.Request = s.request
 		response.ID = s.requestID
 
@@ -121,33 +139,3 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 var _ http.Handler = (*Server)(nil)
-
-const httpServerListenPort = 2020
-
-// findAvailablePort returns an available port on the host machine.
-// it attempts port 2020 up till 2029
-func findAvailablePort() (int, error) {
-	allocatePort := func(port int) error {
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-		if err != nil {
-			return fmt.Errorf("error picking an available port: %w", err)
-		}
-
-		if err := listener.Close(); err != nil {
-			return fmt.Errorf("error closing temporary port listener: %w", err)
-		}
-
-		return nil
-	}
-
-	var err error
-	for i := 0; i < 10; i++ {
-		port := httpServerListenPort + i
-		err = allocatePort(port)
-		if err == nil {
-			return port, nil
-		}
-	}
-
-	return 0, err
-}

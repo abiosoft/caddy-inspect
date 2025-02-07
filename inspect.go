@@ -1,6 +1,7 @@
 package inspect
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -16,6 +17,8 @@ func init() {
 	httpcaddyfile.RegisterHandlerDirective("inspect", parseCaddyfile)
 
 }
+
+var errRequestTerminated = errors.New("request terminated")
 
 // Middleware implements an HTTP handler that writes the
 // inspects the current request.
@@ -54,71 +57,39 @@ func (m *Middleware) Validate() error {
 	return nil
 }
 
-type Request struct {
-	URL           string      `json:"url,omitempty"`
-	Host          string      `json:"host,omitempty"`
-	Method        string      `json:"method,omitempty"`
-	Headers       http.Header `json:"headers,omitempty"`
-	RemoteAddress string      `json:"remote_address,omitempty"`
-	Form          string      `json:"form,omitempty"`
-	Proto         string      `json:"proto,omitempty"`
-	UserAgent     string      `json:"user_agent,omitempty"`
-	Referer       string      `json:"referer,omitempty"`
-	ContentLength int64       `json:"content_length,omitempty"`
-	BasicAuth     *struct {
-		Username string `json:"username,omitempty"`
-		Password string `json:"password,omitempty"`
-	} `json:"basic_auth,omitempty"`
-	Cookies       []*http.Cookie `json:"cookies,omitempty"`
-	ActiveModules []string       `json:"active_modules,omitempty"`
-	LoadedModules []string       `json:"loaded_modules,omitempty"`
-}
-
-func (m *Middleware) fromHttpRequest(r *http.Request) (d Request) {
-	d.URL = r.URL.String()
-	d.Method = r.Method
-	d.Host = r.Host
-	d.Headers = r.Header
-	d.RemoteAddress = r.RemoteAddr
-	d.Form = r.Form.Encode()
-	d.Proto = r.Proto
-	d.UserAgent = r.UserAgent()
-	d.Referer = r.Referer()
-	d.ContentLength = r.ContentLength
-	d.Cookies = r.Cookies()
-
-	username, password, _ := r.BasicAuth()
-	if username != "" || password != "" {
-		d.BasicAuth = &struct {
-			Username string `json:"username,omitempty"`
-			Password string `json:"password,omitempty"`
-		}{Username: username, Password: password}
-	}
-
-	d.LoadedModules = caddy.Modules()
-	for _, m := range m.ctx.Modules() {
-		d.ActiveModules = append(d.ActiveModules, m.CaddyModule().String())
-	}
-
-	return
-}
-
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
 func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
 	m.logger.Info("request is being inspected")
 
-	request := m.fromHttpRequest(r)
-	action := m.server.handle(request)
+	action := m.server.handle(m.ctx, nil, r)
 
 	switch action {
 	case requestActionResume:
 		m.logger.Info("request resumed")
 		return next.ServeHTTP(w, r)
+
+	case requestActionStep:
+		m.logger.Info("request proceeding to response")
+
+		// process middleware chain
+		err := next.ServeHTTP(w, r)
+
+		// handle the updated request details
+		action := m.server.handle(m.ctx, w, r)
+		if err != nil {
+			return err
+		}
+		if action == requestActionResume {
+			return nil
+		}
+
+		// request stopped
+		fallthrough
 	case requestActionStop:
 		m.logger.Info("request stopped")
 	}
 
-	return nil
+	return errRequestTerminated
 }
 
 // UnmarshalCaddyfile implements caddyfile.Unmarshaler.
