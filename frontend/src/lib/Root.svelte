@@ -2,6 +2,8 @@
     import { onDestroy, onMount } from "svelte";
     import Node from "./Node.svelte";
 
+    const host = "http://192.168.106.19:2020";
+
     let treeData = $state([]);
     let hasData = $derived(treeData.length > 0);
     let requestUrl = $state("");
@@ -29,7 +31,7 @@
     }
 
     async function fetchRequests() {
-        const response = await fetch("http://192.168.106.19:2020/request");
+        const response = await fetch(`${host}/request`);
         if (!response.ok) {
             return;
         }
@@ -53,7 +55,7 @@
     }
 
     async function resumeRequest() {
-        const response = await fetch("http://192.168.106.19:2020", {
+        const response = await fetch(host, {
             method: "POST",
         });
         if (response.ok) {
@@ -61,7 +63,7 @@
         }
     }
     async function stopRequest() {
-        const response = await fetch("http://192.168.106.19:2020", {
+        const response = await fetch(`${host}/stop`, {
             method: "POST",
         });
         if (response.ok) {
@@ -76,10 +78,17 @@
     <br />
     {#if hasData}
         <div class="top-row">
-            <button id="resumeButton" onclick={resumeRequest}
+            <button
+                id="resumeButton"
+                onclick={resumeRequest}
+                title="Resume the request"
                 >Resume &#9658;
             </button>
-            <button id="stopButton" class="danger" onclick={stopRequest}
+            <button
+                id="stopButton"
+                class="danger"
+                onclick={stopRequest}
+                title="Terminate the request"
                 >Stop &#9632;
             </button>
         </div>
