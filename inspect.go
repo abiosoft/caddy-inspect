@@ -15,7 +15,7 @@ import (
 func init() {
 	caddy.RegisterModule(Middleware{})
 	httpcaddyfile.RegisterHandlerDirective("inspect", parseCaddyfile)
-
+	httpcaddyfile.RegisterDirectiveOrder("inspect", httpcaddyfile.After, "encode")
 }
 
 var errRequestTerminated = errors.New("request terminated")
