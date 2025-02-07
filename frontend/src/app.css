@@ -61,7 +61,23 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+}
+
+.top-row-item {
+  padding: 5px;
+}
+
+.top-row-item button {
+  width: 50px;
+  font-size: 25px;
+  padding: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.top-row-right {
+  margin-left: auto;
 }
 
 .header {

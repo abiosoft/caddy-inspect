@@ -1,5 +1,4 @@
 <script>
-    import { onMount } from "svelte";
     import Node from "./Node.svelte";
 
     const ARRAY_KEY = "__array__";

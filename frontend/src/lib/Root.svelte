@@ -12,6 +12,7 @@
 
     let intervalId = $state(0);
     let currentRequestId = $state(0);
+    let hasResponse = $state(false);
 
     // Fetch data from the API
     onMount(async () => {
@@ -51,6 +52,7 @@
         currentRequestId = data.id;
         treeData = Object.entries(data.request);
         requestUrl = data.request.url;
+        hasResponse = data.has_response;
 
         window.focus();
         document.title = "Caddy Inspect - " + requestUrl;
@@ -72,6 +74,15 @@
             fetchRequests();
         }
     }
+
+    async function stepRequest() {
+        const response = await fetch(`${host}/step`, {
+            method: "POST",
+        });
+        if (response.ok) {
+            fetchRequests();
+        }
+    }
 </script>
 
 <div class="container" id="content">
@@ -79,24 +90,36 @@
         <img class="logo" alt="Caddy logo" /> <span>Inspect</span>
     </div>
     <hr />
-    <br />
     {#if hasData}
         <div class="top-row">
-            <button
-                id="resumeButton"
-                onclick={resumeRequest}
-                title="Resume the request"
-                >Resume &#9658;
-            </button>
-            <button
-                id="stopButton"
-                class="danger"
-                onclick={stopRequest}
-                title="Terminate the request"
-                >Stop &#9632;
-            </button>
+            <span class="top-row-item">
+                <button
+                    id="resumeButton"
+                    onclick={resumeRequest}
+                    title="Resume the request"
+                    >&#x23f5;
+                </button>
+            </span>
+            {#if !hasResponse}
+                <span class="top-row-item">
+                    <button
+                        id="resumeButton"
+                        onclick={stepRequest}
+                        title="Resume the request but pause to inspect the response"
+                        >&#x23ed;
+                    </button>
+                </span>
+            {/if}
+            <span class="top-row-item top-row-right">
+                <button
+                    id="stopButton"
+                    class="danger"
+                    onclick={stopRequest}
+                    title="Terminate the request"
+                    >&#x23f9;
+                </button>
+            </span>
         </div>
-
         <div class="tree json-tree">
             {#each treeData as [key, node]}
                 <Node key={snakeToTitleCase(key)} {node} />
