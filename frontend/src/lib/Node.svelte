@@ -72,7 +72,7 @@
         align-items: center;
     }
     .toggle-icon {
-        margin-right: 5px;
+        width: 15px;
         font-size: 10px;
     }
 
