@@ -8,10 +8,7 @@
 
     let nodeEntries = Object.entries(node);
     let nodeIsArray = $derived(Array.isArray(node));
-    let hasChildren = $derived.by(() => {
-        console.log("derived by", key, typeof node, node);
-        return typeof node === "object" && node !== null;
-    });
+    let hasChildren = $derived(typeof node === "object" && node !== null);
 
     let itemIsArray = key == ARRAY_KEY;
 
@@ -20,10 +17,6 @@
     function toggle() {
         isOpen = !isOpen;
     }
-
-    onMount(() => {
-        $inspect(node);
-    });
 </script>
 
 <div class="tree-node">
@@ -35,11 +28,11 @@
         {/if}
         <div class="key-value-container">
             {#if itemIsArray}
-                <input class="value-only" value={node} readonly="readonly" />
+                <input class="value-only" value={node} readonly />
             {:else}
                 <span class="key">{key}</span>
                 {#if !hasChildren}
-                    <input class="value" value={node} readonly="readonly" />
+                    <input class="value" value={node} readonly />
                 {/if}
             {/if}
         </div>

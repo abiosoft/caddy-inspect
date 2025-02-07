@@ -1,4 +1,6 @@
 <script>
+    // @ts-nocheck
+
     import { onDestroy, onMount } from "svelte";
     import Node from "./Node.svelte";
 
