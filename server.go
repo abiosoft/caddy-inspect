@@ -17,11 +17,18 @@ type Server struct {
 	logger    *zap.Logger
 	err       error
 
-	clear chan struct{}
+	action chan requestAction
 
 	handlerMutex sync.Mutex
 	requestMutex sync.RWMutex
 }
+
+type requestAction = int
+
+const (
+	requestActionResume requestAction = iota
+	requestActionStop
+)
 
 func (s *Server) hasRequest() bool {
 	s.requestMutex.RLock()
@@ -47,7 +54,7 @@ func (s *Server) start() (port int, err error) {
 	return port, nil
 }
 
-func (s *Server) handle(r Request) {
+func (s *Server) handle(r Request) requestAction {
 	s.handlerMutex.Lock()
 	defer s.handlerMutex.Unlock()
 
@@ -56,11 +63,13 @@ func (s *Server) handle(r Request) {
 	s.requestID = time.Now().UnixNano()
 	s.requestMutex.Unlock()
 
-	<-s.clear
+	action := <-s.action
 
 	s.requestMutex.Lock()
 	s.request = nil
 	s.requestMutex.Unlock()
+
+	return action
 }
 
 func writeJson(w http.ResponseWriter, body any) error {
@@ -72,10 +81,17 @@ func writeJson(w http.ResponseWriter, body any) error {
 // ServeHTTP implements http.Handler.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// post requests
+	// resume and stop
 	if r.Method == http.MethodPost {
-		if s.hasRequest() {
-			s.clear <- struct{}{}
+		action := requestActionResume
+		if r.URL.Path == "/stop" {
+			action = requestActionStop
 		}
+
+		if s.hasRequest() {
+			s.action <- action
+		}
+
 		if err := writeJson(w, "ok"); err != nil {
 			s.logger.Error("error writing http response", zap.Error(err))
 		}

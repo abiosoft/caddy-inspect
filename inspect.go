@@ -38,7 +38,7 @@ func (m *Middleware) Provision(ctx caddy.Context) error {
 	m.logger = ctx.Logger()
 	m.ctx = ctx
 
-	m.server = &Server{logger: m.logger, clear: make(chan struct{})}
+	m.server = &Server{logger: m.logger, action: make(chan requestAction)}
 
 	port, err := m.server.start()
 	if err != nil {
@@ -108,9 +108,17 @@ func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddy
 	m.logger.Info("a request is being inspected")
 
 	request := m.fromHttpRequest(r)
-	m.server.handle(request)
+	action := m.server.handle(request)
 
-	return next.ServeHTTP(w, r)
+	switch action {
+	case requestActionResume:
+		m.logger.Info("request resumed")
+		return next.ServeHTTP(w, r)
+	case requestActionStop:
+		m.logger.Info("request stopped")
+	}
+
+	return nil
 }
 
 // UnmarshalCaddyfile implements caddyfile.Unmarshaler.
