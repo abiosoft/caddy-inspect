@@ -105,7 +105,7 @@ func (m *Middleware) fromHttpRequest(r *http.Request) (d Request) {
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
 func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
-	m.logger.Info("a request is being inspected")
+	m.logger.Info("request is being inspected")
 
 	request := m.fromHttpRequest(r)
 	action := m.server.handle(request)
