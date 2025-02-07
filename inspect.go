@@ -59,17 +59,17 @@ func (m *Middleware) Validate() error {
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
 func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
-	m.logger.Info("request is being inspected")
+	m.logger.Debug("request is being inspected")
 
 	action := m.server.handle(m.ctx, nil, r)
 
 	switch action {
 	case requestActionResume:
-		m.logger.Info("request resumed")
+		m.logger.Debug("request resumed")
 		return next.ServeHTTP(w, r)
 
 	case requestActionStep:
-		m.logger.Info("request proceeding to response")
+		m.logger.Debug("request proceeding to response")
 
 		// process middleware chain
 		err := next.ServeHTTP(w, r)
@@ -86,7 +86,7 @@ func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddy
 		// request stopped
 		fallthrough
 	case requestActionStop:
-		m.logger.Info("request stopped")
+		m.logger.Debug("request stopped")
 	}
 
 	return errRequestTerminated
