@@ -23,6 +23,12 @@
         clearInterval(intervalId);
     });
 
+    $effect(() => {
+        document.title = !!requestUrl
+            ? `Caddy Inspect - ${requestUrl}`
+            : "Caddy Inspect";
+    });
+
     function snakeToTitleCase(str) {
         return str
             .split("_")
@@ -33,6 +39,12 @@
             .join(" ");
     }
 
+    function resetRequests() {
+        treeData = [];
+        requestUrl = "";
+        currentRequestId = 0;
+    }
+
     async function fetchRequests() {
         const response = await fetch(`${host}/request`);
         if (!response.ok) {
@@ -41,8 +53,7 @@
 
         const data = await response.json();
         if (!data.has_request) {
-            treeData = [];
-            document.title = "Caddy Inspect";
+            resetRequests();
             return;
         }
         if (currentRequestId == data.id) {
@@ -55,7 +66,6 @@
         hasResponse = data.has_response;
 
         window.focus();
-        document.title = "Caddy Inspect - " + requestUrl;
     }
 
     async function resumeRequest() {
@@ -63,6 +73,7 @@
             method: "POST",
         });
         if (response.ok) {
+            resetRequests();
             fetchRequests();
         }
     }
@@ -71,6 +82,7 @@
             method: "POST",
         });
         if (response.ok) {
+            resetRequests();
             fetchRequests();
         }
     }
@@ -80,6 +92,7 @@
             method: "POST",
         });
         if (response.ok) {
+            resetRequests();
             fetchRequests();
         }
     }
