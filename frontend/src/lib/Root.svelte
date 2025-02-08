@@ -9,6 +9,8 @@
     let treeData = $state([]);
     let hasData = $derived(treeData.length > 0);
     let requestUrl = $state("");
+    let sourceFile = $state("");
+    let hasSourceFile = $derived(sourceFile != "");
 
     let intervalId = $state(0);
     let currentRequestId = $state(0);
@@ -43,6 +45,7 @@
         treeData = [];
         requestUrl = "";
         currentRequestId = 0;
+        sourceFile = "";
     }
 
     async function fetchRequests() {
@@ -60,10 +63,21 @@
             return;
         }
 
+        // delete caddyfile details from actual data
+        const { caddyfile, ...request } = data.request;
+
+        // request id
         currentRequestId = data.id;
-        treeData = Object.entries(data.request);
+
+        // tree rendering data
+        treeData = Object.entries(request);
+
+        // other rendering properties
         requestUrl = data.request.url;
         hasResponse = data.has_response;
+        if (caddyfile) {
+            sourceFile = `${caddyfile.file}:${caddyfile.line}`;
+        }
 
         window.focus();
     }
@@ -134,6 +148,12 @@
             </span>
         </div>
         <div class="tree json-tree">
+            {#if hasSourceFile}
+                <div class="source-file">
+                    &#9673 <code>{sourceFile}</code>
+                </div>
+            {/if}
+
             {#each treeData as [key, node]}
                 <Node key={snakeToTitleCase(key)} {node} />
             {/each}

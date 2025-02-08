@@ -182,33 +182,9 @@ input[type="text"]:focus {
   color: var(--text-color);
 }
 
-.json-key {
+.source-file {
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 16px;
   font-weight: bold;
-  text-transform: capitalize;
-  padding: 10px;
-}
-
-.json-collapsible {
-  cursor: pointer;
-  text-transform: capitalize;
-  padding: 10px;
-}
-
-.json-collapsible::before {
-  content: '\25B6';
-  display: inline-block;
-  margin-right: 5px;
-}
-
-.json-collapsible.expanded::before {
-  content: '\25BC';
-}
-
-.json-content {
-  display: none;
-  padding-left: 20px;
-}
-
-.json-content.expanded {
-  display: block;
 }
