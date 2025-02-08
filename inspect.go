@@ -26,6 +26,9 @@ type Middleware struct {
 	logger *zap.Logger
 	ctx    caddy.Context
 	server *Server
+
+	File string
+	Line int
 }
 
 // CaddyModule returns the Caddy module information.
@@ -59,17 +62,19 @@ func (m *Middleware) Validate() error {
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
 func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
-	m.logger.Debug("request is being inspected")
+	logger := m.logger.With(zap.String("file", m.File), zap.Int("line", m.Line))
+
+	logger.Debug("inspecting")
 
 	action := m.server.handle(m.ctx, nil, r)
 
 	switch action {
 	case requestActionResume:
-		m.logger.Debug("request resumed")
+		logger.Debug("resumed")
 		return next.ServeHTTP(w, r)
 
 	case requestActionStep:
-		m.logger.Debug("request proceeding to response")
+		logger.Debug("proceeding to response")
 
 		// process middleware chain
 		err := next.ServeHTTP(w, r)
@@ -86,7 +91,7 @@ func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddy
 		// request stopped
 		fallthrough
 	case requestActionStop:
-		m.logger.Debug("request stopped")
+		logger.Debug("stopped")
 	}
 
 	return errRequestTerminated
@@ -95,6 +100,10 @@ func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddy
 // UnmarshalCaddyfile implements caddyfile.Unmarshaler.
 func (m *Middleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	d.Next() // consume directive name
+
+	// persist the file name and line number
+	m.File = d.File()
+	m.Line = d.Line()
 
 	return nil
 }
