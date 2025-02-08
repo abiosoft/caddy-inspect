@@ -1,6 +1,20 @@
+{
+	debug
+}
+
 :8888
 
+inspect
+
 route {
-	inspect
-	respond "Hello from caddy server"
+	route {
+		route {
+			request_header +Extra-header "Some values are here"
+			header +My-header "This is a very long value"
+			rewrite /sample/* /sample/secondrequest
+			inspect
+		}
+		inspect
+		respond "Hello from caddy server"
+	}
 }
