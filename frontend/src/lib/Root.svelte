@@ -4,7 +4,7 @@
     import { onDestroy, onMount } from "svelte";
     import Node from "./Node.svelte";
 
-    const host = "http://192.168.106.19:2020";
+    const host = "http://127.0.0.1:2020";
 
     let treeData = $state([]);
     let hasData = $derived(treeData.length > 0);
