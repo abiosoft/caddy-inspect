@@ -7,20 +7,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/caddyserver/caddy/v2"
 	"go.uber.org/zap"
 )
 
 type Server struct {
+	// http handler
 	request   *Response
 	requestID int64
-	logger    *zap.Logger
-	err       error
+	action    chan requestAction
 
-	action chan requestAction
+	// instance
+	port   int
+	logger *zap.Logger
+	err    error
 
-	handlerMutex sync.Mutex
-	requestMutex sync.RWMutex
+	instanceMutex sync.Mutex
+	requestMutex  sync.RWMutex
 }
 
 type requestAction = int
@@ -45,28 +47,42 @@ func (s *Server) hasResponse() bool {
 	return s.request != nil && s.request.responseMode
 }
 
-func (s *Server) start() (port int, err error) {
+// start starts the server. If the server is already running, nothing is done.
+//
+// returns the port the server is listening on,
+// whether the server has been previously started,
+// and an error if any
+func (s *Server) start() (port int, started bool, err error) {
+	s.instanceMutex.Lock()
+	defer s.instanceMutex.Unlock()
+
+	// server already started
+	if s.port > 0 {
+		return s.port, true, nil
+	}
+
 	port, err = findAvailablePort()
 	if err != nil {
-		return port, fmt.Errorf("cannot start caddy-inspect server: %w", err)
+		return port, false, fmt.Errorf("cannot start caddy-inspect server: %w", err)
 	}
+	s.port = port
 
 	errChan := make(chan error)
 	go func(server *Server) {
 		errChan <- http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", port), server)
-		s.handlerMutex.Lock()
+		s.instanceMutex.Lock()
 		s.err = <-errChan
-		s.handlerMutex.Unlock()
+		s.instanceMutex.Unlock()
 	}(s)
 
-	return port, nil
+	return port, false, nil
 }
 
-func (s *Server) handle(ctx caddy.Context, w http.ResponseWriter, r *http.Request) requestAction {
-	s.handlerMutex.Lock()
-	defer s.handlerMutex.Unlock()
+func (s *Server) handle(m Middleware, w http.ResponseWriter, r *http.Request) requestAction {
+	s.instanceMutex.Lock()
+	defer s.instanceMutex.Unlock()
 
-	request := buildResponse(ctx, w, r)
+	request := buildResponse(m, w, r)
 
 	s.requestMutex.Lock()
 	s.request = &request
@@ -77,6 +93,7 @@ func (s *Server) handle(ctx caddy.Context, w http.ResponseWriter, r *http.Reques
 
 	s.requestMutex.Lock()
 	s.request = nil
+	s.requestID = 0
 	s.requestMutex.Unlock()
 
 	return action
@@ -139,3 +156,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 var _ http.Handler = (*Server)(nil)
+
+var defaultServer *Server
+
+func getServerInstance(m *Middleware) *Server {
+	if defaultServer == nil {
+		defaultServer = &Server{
+			logger: m.ctx.Logger(),
+			action: make(chan requestAction),
+		}
+	}
+
+	return defaultServer
+}

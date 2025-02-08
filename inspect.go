@@ -25,7 +25,6 @@ var errRequestTerminated = errors.New("request terminated")
 type Middleware struct {
 	logger *zap.Logger
 	ctx    caddy.Context
-	server *Server
 
 	File string
 	Line int
@@ -44,14 +43,18 @@ func (m *Middleware) Provision(ctx caddy.Context) error {
 	m.logger = ctx.Logger()
 	m.ctx = ctx
 
-	m.server = &Server{logger: m.logger, action: make(chan requestAction)}
+	server := getServerInstance(m)
 
-	port, err := m.server.start()
+	port, started, err := server.start()
 	if err != nil {
 		return fmt.Errorf("error occured during provision: %w", err)
 	}
 
-	m.logger.Info(fmt.Sprintf("inspect console available at http://127.0.0.1:%d", port))
+	// print the server listen address if not previously running
+	if !started {
+		m.logger.Info(fmt.Sprintf("inspect console available at http://127.0.0.1:%d", port))
+	}
+
 	return nil
 }
 
@@ -66,7 +69,8 @@ func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddy
 
 	logger.Debug("inspecting")
 
-	action := m.server.handle(m.ctx, nil, r)
+	server := getServerInstance(&m)
+	action := server.handle(m, nil, r)
 
 	switch action {
 	case requestActionResume:
@@ -80,7 +84,7 @@ func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddy
 		err := next.ServeHTTP(w, r)
 
 		// handle the updated request details
-		action := m.server.handle(m.ctx, w, r)
+		action := server.handle(m, w, r)
 		if err != nil {
 			return err
 		}

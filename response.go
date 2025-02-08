@@ -25,10 +25,14 @@ type Response struct {
 	Cookies       []*http.Cookie `json:"cookies,omitempty"`
 	ActiveModules []string       `json:"active_modules,omitempty"`
 	LoadedModules []string       `json:"loaded_modules,omitempty"`
-	responseMode  bool
+	Caddyfile     *struct {
+		File string `json:"file,omitempty"`
+		Line int    `json:"line,omitempty"`
+	} `json:"caddyfile,omitempty"`
+	responseMode bool
 }
 
-func buildResponse(ctx caddy.Context, w http.ResponseWriter, r *http.Request) (d Response) {
+func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Response) {
 	d.URL = r.URL.String()
 	d.Method = r.Method
 	d.Host = r.Host
@@ -55,8 +59,15 @@ func buildResponse(ctx caddy.Context, w http.ResponseWriter, r *http.Request) (d
 	}
 
 	d.LoadedModules = caddy.Modules()
-	for _, m := range ctx.Modules() {
+	for _, m := range m.ctx.Modules() {
 		d.ActiveModules = append(d.ActiveModules, m.CaddyModule().String())
+	}
+
+	if m.File != "" && m.Line > 0 {
+		d.Caddyfile = &struct {
+			File string `json:"file,omitempty"`
+			Line int    `json:"line,omitempty"`
+		}{File: m.File, Line: m.Line}
 	}
 
 	return
