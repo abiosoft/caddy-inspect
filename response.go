@@ -86,8 +86,8 @@ func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Resp
 		// if it is an handler error, set specific error
 		if err, ok := err.(caddyhttp.HandlerError); ok {
 			herr := handlerErr{HandlerError: err}
-			if err.Err != nil {
-				herr.Err = err.Err.Error()
+			if err := err.Err; err != nil {
+				herr.Err = err.Error()
 			}
 			d.Error = herr
 		}
