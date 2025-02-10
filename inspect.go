@@ -47,8 +47,11 @@ func (m *Middleware) Provision(ctx caddy.Context) error {
 	m.logger = ctx.Logger()
 	m.ctx = ctx
 
-	server := getServerInstance(m)
+	if err := setUpServer(m); err != nil {
+		return err
+	}
 
+	server := getServerInstance()
 	port, started, err := server.start()
 	if err != nil {
 		return fmt.Errorf("error occured during provision: %w", err)
@@ -73,7 +76,7 @@ func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddy
 
 	logger.Debug("inspecting")
 
-	server := getServerInstance(&m)
+	server := getServerInstance()
 	action := server.handle(m, nil, r)
 
 	switch action {

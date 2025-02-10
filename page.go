@@ -1,6 +1,8 @@
 package inspect
 
-import _ "embed"
+import (
+	"embed"
+)
 
-//go:embed static/index.html
-var htmlContent []byte
+//go:embed static/assets static/index.html
+var staticFS embed.FS

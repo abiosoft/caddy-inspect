@@ -3,6 +3,7 @@ package inspect
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"sync"
 	"time"
@@ -15,6 +16,9 @@ type Server struct {
 	request   *Response
 	requestID int64
 	action    chan requestAction
+
+	// static handler
+	static http.Handler
 
 	// instance
 	port   int
@@ -151,21 +155,30 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// all other endpoints
-	w.Write(htmlContent)
+	s.static.ServeHTTP(w, r)
 }
 
 var _ http.Handler = (*Server)(nil)
 
 var defaultServer *Server
 
-func getServerInstance(m *Middleware) *Server {
-	if defaultServer == nil {
-		defaultServer = &Server{
-			logger: m.ctx.Logger(),
-			action: make(chan requestAction),
-		}
+func setUpServer(m *Middleware) error {
+	// setup already done
+	if defaultServer != nil {
+		return nil
 	}
 
-	return defaultServer
+	dir, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		return fmt.Errorf("error setting up static file server: %w", err)
+	}
+
+	defaultServer = &Server{
+		logger: m.ctx.Logger(),
+		action: make(chan requestAction),
+		static: http.FileServerFS(dir),
+	}
+	return nil
 }
+
+func getServerInstance() *Server { return defaultServer }
