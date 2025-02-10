@@ -25,8 +25,8 @@ type Response struct {
 	} `json:"basic_auth,omitempty"`
 	Cookies          []*http.Cookie `json:"cookies,omitempty"`
 	ContextVariables map[string]any `json:"context_variables,omitempty"`
-	Error            string         `json:"error,omitempty"`
-	ActiveModules    []string       `json:"active_modules,omitempty"`
+	Error            any            `json:"error,omitempty"`
+	ContextModules   []string       `json:"context_modules,omitempty"`
 	LoadedModules    []string       `json:"loaded_modules,omitempty"`
 	Caddyfile        *struct {
 		File            string   `json:"file,omitempty"`
@@ -65,7 +65,7 @@ func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Resp
 
 	d.LoadedModules = caddy.Modules()
 	for _, m := range m.ctx.Modules() {
-		d.ActiveModules = append(d.ActiveModules, m.CaddyModule().String())
+		d.ContextModules = append(d.ContextModules, m.CaddyModule().String())
 	}
 
 	if m.File != "" && m.Line > 0 {
@@ -82,7 +82,21 @@ func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Resp
 
 	if err, _ := r.Context().Value(caddyhttp.ErrorCtxKey).(error); err != nil {
 		d.Error = err.Error()
+
+		// if it is an handler error, set specific error
+		if err, ok := err.(caddyhttp.HandlerError); ok {
+			herr := handlerErr{HandlerError: err}
+			if err.Err != nil {
+				herr.Err = err.Err.Error()
+			}
+			d.Error = herr
+		}
 	}
 
 	return
+}
+
+type handlerErr struct {
+	Err string
+	caddyhttp.HandlerError
 }
