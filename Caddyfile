@@ -35,6 +35,11 @@ route /webhook/* {
 	respond "Webhook received"
 }
 
+route /error* {
+	inspect
+	error "This is user triggered error" 503
+}
+
 # Custom headers for enhanced security and performance
 header {
 	Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
@@ -43,6 +48,11 @@ header {
 	Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self';"
 	Referrer-Policy "no-referrer"
 	Permissions-Policy "geolocation=(self)"
+}
+
+handle_errors {
+	inspect
+	respond {err.message} {err.status_code}
 }
 
 # Catch-all route for everything else
