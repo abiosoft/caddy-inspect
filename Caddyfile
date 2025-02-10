@@ -8,13 +8,10 @@ inspect
 
 route {
 	route {
-		route {
-			request_header +Extra-header "Some values are here"
-			header +My-header "This is a very long value"
-			rewrite /sample/* /sample/secondrequest
-			inspect
-		}
+		request_header +Extra-header "Some values are here"
+		header +My-header "This is a very long value"
+		rewrite /sample/* /sample/secondrequest
 		inspect
-		respond "Hello from caddy server"
 	}
+	respond "Hello from caddy server"
 }
