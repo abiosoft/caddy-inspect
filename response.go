@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/caddyserver/caddy/v2"
+	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 )
 
 type Response struct {
@@ -22,10 +23,12 @@ type Response struct {
 		Username string `json:"username,omitempty"`
 		Password string `json:"password,omitempty"`
 	} `json:"basic_auth,omitempty"`
-	Cookies       []*http.Cookie `json:"cookies,omitempty"`
-	ActiveModules []string       `json:"active_modules,omitempty"`
-	LoadedModules []string       `json:"loaded_modules,omitempty"`
-	Caddyfile     *struct {
+	Cookies          []*http.Cookie `json:"cookies,omitempty"`
+	ContextVariables map[string]any `json:"context_variables,omitempty"`
+	Error            string         `json:"error,omitempty"`
+	ActiveModules    []string       `json:"active_modules,omitempty"`
+	LoadedModules    []string       `json:"loaded_modules,omitempty"`
+	Caddyfile        *struct {
 		File            string   `json:"file,omitempty"`
 		Line            int      `json:"line,omitempty"`
 		Source          []string `json:"source,omitempty"`
@@ -72,6 +75,13 @@ func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Resp
 			Source          []string `json:"source,omitempty"`
 			SourceLineStart int      `json:"source_line_start,omitempty"`
 		}{File: m.File, Line: m.Line, Source: m.Source, SourceLineStart: m.SourceLineStart}
+	}
+
+	vars, _ := r.Context().Value(caddyhttp.VarsCtxKey).(map[string]any)
+	d.ContextVariables = vars
+
+	if err, _ := r.Context().Value(caddyhttp.ErrorCtxKey).(error); err != nil {
+		d.Error = err.Error()
 	}
 
 	return
