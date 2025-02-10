@@ -1,18 +1,52 @@
+# example Caddyfile for debugging purposes
 {
-	debug
+	# debug
 }
 
 :8888
 
 inspect
 
-route {
-	route {
-		request_header +Extra-header "Extra values"
-		header +My-header "Some header value"
-		rewrite /sample/* /sample/secondrequest
-		inspect
-	}
-	inspect
+route /sample {
+	request_header +Extra-header "Extra values"
+	header +My-header "Some header value"
+	rewrite /sample/* /sample/secondrequest
 	respond "Hello from caddy server"
+}
+
+route /assets/* {
+	header Cache-Control "public, max-age=3600"
+	inspect
+	file_server {
+		root /var/www/assets
+	}
+}
+
+# Rewrite rule for custom API versioning
+rewrite /api/* /api/v1/*
+
+# Route for custom API with rate limiting
+route /api/v1/* {
+	respond "API request received"
+}
+
+# Route for a custom endpoint like a webhook
+route /webhook/* {
+	respond "Webhook received"
+}
+
+# Custom headers for enhanced security and performance
+header {
+	Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+	X-Content-Type-Options "nosniff"
+	X-Frame-Options "DENY"
+	Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self';"
+	Referrer-Policy "no-referrer"
+	Permissions-Policy "geolocation=(self)"
+}
+
+# Catch-all route for everything else
+route {
+	inspect
+	respond "404 Page Not Found" 404
 }
