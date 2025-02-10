@@ -98,7 +98,7 @@ func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddy
 		logger.Debug("stopped")
 	}
 
-	return errRequestTerminated
+	return caddyhttp.Error(http.StatusServiceUnavailable, errRequestTerminated)
 }
 
 // UnmarshalCaddyfile implements caddyfile.Unmarshaler.
