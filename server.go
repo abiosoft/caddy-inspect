@@ -101,7 +101,7 @@ func (s *Server) handle(m Middleware, w http.ResponseWriter, r *http.Request) re
 
 func writeJson(w http.ResponseWriter, body any) error {
 	w.Header().Add("content-type", "application/json")
-	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Origin", "*") // this should probably be removed.
 	return json.NewEncoder(w).Encode(body)
 }
 
