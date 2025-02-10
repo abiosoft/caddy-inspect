@@ -7,9 +7,10 @@
   --button-active-bg-color: #004085;
   --button-danger-color: #c73636;
   --button-hover-danger-color: #a62d2d;
-  --textarea-bg-color: #f9f9f9;
+  --calm-color: #7e7e7e;
   --input-focus-border-color: #007bff;
   --input-focus-shadow-color: rgba(0, 123, 255, 0.5);
+  --snippet-highlight-color: rgba(150, 150, 150, 0.5);
 }
 
 .logo {
@@ -28,9 +29,10 @@
     --button-active-bg-color: #0e447a;
     --button-danger-color: #a0222f;
     --button-hover-danger-color: #881c28;
-    --textarea-bg-color: #1e1e1e;
+    --calm-color: #7e7e7e;
     --input-focus-border-color: #1a73e8;
     --input-focus-shadow-color: rgba(26, 115, 232, 0.5);
+    --snippet-highlight-color: rgba(150, 150, 150, 0.5);
   }
 
   .logo {
@@ -45,49 +47,6 @@ body {
   padding: 0;
   box-sizing: border-box;
   background-color: var(--bg-color);
-  color: var(--text-color);
-}
-
-.container {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: var(--bg-color);
-}
-
-.top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.top-row-item {
-  padding: 5px;
-}
-
-.top-row-item button {
-  width: 50px;
-  font-size: 25px;
-  padding: 0;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  line-height: 1.2;
-}
-
-.top-row-right {
-  margin-left: auto;
-}
-
-.header {
-  display: flex;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  font-weight: bold;
   color: var(--text-color);
 }
 
@@ -123,30 +82,6 @@ button.danger:hover {
 }
 
 
-textarea {
-  width: 100%;
-  height: 300px;
-  font-family: monospace;
-  font-size: 14px;
-  padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background-color: var(--textarea-bg-color);
-  color: var(--text-color);
-  resize: none;
-}
-
-.input-row {
-  display: flex;
-  flex-direction: column;
-}
-
-label {
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
 input[type="text"] {
   width: 100%;
   padding: 10px;
@@ -170,21 +105,4 @@ input[type="text"]:focus {
   height: 30vh;
   font-size: 20px;
   color: var(--text-color);
-}
-
-.json-tree {
-  font-family: monospace;
-  font-size: 15px;
-  padding: 20px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background-color: var(--textarea-bg-color);
-  color: var(--text-color);
-}
-
-.source-file {
-  padding: 10px;
-  margin-bottom: 10px;
-  font-size: 16px;
-  font-weight: bold;
 }
