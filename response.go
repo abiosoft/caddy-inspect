@@ -8,8 +8,8 @@ import (
 
 type Response struct {
 	URL             string      `json:"url,omitempty"`
-	Host            string      `json:"host,omitempty"`
 	Method          string      `json:"method,omitempty"`
+	Host            string      `json:"host,omitempty"`
 	RequestHeaders  http.Header `json:"request_headers,omitempty"`
 	ResponseHeaders http.Header `json:"response_headers,omitempty"`
 	RemoteAddress   string      `json:"remote_address,omitempty"`
@@ -26,8 +26,10 @@ type Response struct {
 	ActiveModules []string       `json:"active_modules,omitempty"`
 	LoadedModules []string       `json:"loaded_modules,omitempty"`
 	Caddyfile     *struct {
-		File string `json:"file,omitempty"`
-		Line int    `json:"line,omitempty"`
+		File            string   `json:"file,omitempty"`
+		Line            int      `json:"line,omitempty"`
+		Source          []string `json:"source,omitempty"`
+		SourceLineStart int      `json:"source_line_start,omitempty"`
 	} `json:"caddyfile,omitempty"`
 	responseMode bool
 }
@@ -65,9 +67,11 @@ func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Resp
 
 	if m.File != "" && m.Line > 0 {
 		d.Caddyfile = &struct {
-			File string `json:"file,omitempty"`
-			Line int    `json:"line,omitempty"`
-		}{File: m.File, Line: m.Line}
+			File            string   `json:"file,omitempty"`
+			Line            int      `json:"line,omitempty"`
+			Source          []string `json:"source,omitempty"`
+			SourceLineStart int      `json:"source_line_start,omitempty"`
+		}{File: m.File, Line: m.Line, Source: m.Source, SourceLineStart: m.SourceLineStart}
 	}
 
 	return

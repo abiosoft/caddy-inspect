@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -26,8 +28,10 @@ type Middleware struct {
 	logger *zap.Logger
 	ctx    caddy.Context
 
-	File string
-	Line int
+	File            string
+	Line            int
+	Source          []string
+	SourceLineStart int // for lack of a better name
 }
 
 // CaddyModule returns the Caddy module information.
@@ -109,6 +113,13 @@ func (m *Middleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	m.File = d.File()
 	m.Line = d.Line()
 
+	if m.File != "" {
+		if src, lineStart, err := loadCaddyfileSnippet(m.File, m.Line); err == nil {
+			m.Source = src
+			m.SourceLineStart = lineStart
+		}
+	}
+
 	return nil
 }
 
@@ -117,6 +128,33 @@ func parseCaddyfile(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error)
 	var m Middleware
 	err := m.UnmarshalCaddyfile(h.Dispenser)
 	return m, err
+}
+
+// loadCaddyfileSnippet reads 5 lines within context in the loaded Caddyfile.
+func loadCaddyfileSnippet(file string, line int) (snippet []string, firstLine int, err error) {
+	f, err := os.ReadFile(file)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error reading Caddyfile: %w", err)
+	}
+
+	lines := strings.Split(string(f), "\n")
+	if len(lines) < line {
+		return nil, 0, fmt.Errorf("invalid line: %d", line)
+	}
+
+	lineIndex := line - 1 // slice index
+
+	start := lineIndex - 2
+	if start < 0 {
+		start = 0
+	}
+
+	end := (lineIndex + 1) + 2 // the extra 1 is for ending index which is not inclusive.
+	if end > len(lines) {
+		end = len(lines)
+	}
+
+	return lines[start:end], start + 1, nil
 }
 
 // Interface guards
