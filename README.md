@@ -43,7 +43,7 @@ caddy run --watch
 
 ### Access the Inspect console
 
-Open http://localhost:2020 in the browser to access Caddy Inspect.
+Open http://localhost:2020 in the browser to access the console.
 
 > [!NOTE]
 > Another port would be assigned if `2020` is not available.
