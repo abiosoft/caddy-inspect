@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/caddyserver/caddy/v2"
 	"go.uber.org/zap"
 )
 
@@ -162,7 +163,7 @@ var _ http.Handler = (*Server)(nil)
 
 var defaultServer *Server
 
-func setUpServer(m *Middleware) error {
+func setUpServer(ctx caddy.Context) error {
 	// setup already done
 	if defaultServer != nil {
 		return nil
@@ -174,7 +175,7 @@ func setUpServer(m *Middleware) error {
 	}
 
 	defaultServer = &Server{
-		logger: m.ctx.Logger(),
+		logger: ctx.Logger(),
 		action: make(chan requestAction),
 		static: http.FileServerFS(dir),
 	}

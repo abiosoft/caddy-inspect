@@ -73,17 +73,17 @@ func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Resp
 
 	_, d.CaddyVersion = caddy.Version()
 
-	if m.File != "" && m.Line > 0 {
+	if m.valid() {
 		d.Caddyfile = &struct {
 			File            string   `json:"file,omitempty"`
 			Line            int      `json:"line,omitempty"`
 			Source          []string `json:"source,omitempty"`
 			SourceLineStart int      `json:"source_line_start,omitempty"`
 		}{
-			File:            m.File,
-			Line:            m.Line,
-			Source:          m.Source,
-			SourceLineStart: m.SourceLineStart,
+			File:            m.file,
+			Line:            m.line,
+			Source:          m.source,
+			SourceLineStart: m.sourceLineStart,
 		}
 	}
 

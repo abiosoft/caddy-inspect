@@ -28,10 +28,8 @@ type Middleware struct {
 	logger *zap.Logger
 	ctx    caddy.Context
 
-	File            string
-	Line            int
-	Source          []string
-	SourceLineStart int // for lack of a better name
+	Key string
+	snippetDetails
 }
 
 // CaddyModule returns the Caddy module information.
@@ -46,8 +44,9 @@ func (Middleware) CaddyModule() caddy.ModuleInfo {
 func (m *Middleware) Provision(ctx caddy.Context) error {
 	m.logger = ctx.Logger()
 	m.ctx = ctx
+	m.snippetDetails = configMap.get(m.Key)
 
-	if err := setUpServer(m); err != nil {
+	if err := setUpServer(ctx); err != nil {
 		return err
 	}
 
@@ -72,7 +71,7 @@ func (m *Middleware) Validate() error {
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
 func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
-	logger := m.logger.With(zap.String("file", m.File), zap.Int("line", m.Line))
+	logger := m.logger.With(zap.String("file", m.file), zap.Int("line", m.line))
 
 	logger.Debug("inspecting")
 
@@ -113,14 +112,19 @@ func (m *Middleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	d.Next() // consume directive name
 
 	// persist the file name and line number
-	m.File = d.File()
-	m.Line = d.Line()
+	var s snippetDetails
+	s.file = d.File()
+	s.line = d.Line()
 
-	if m.File != "" {
-		if src, lineStart, err := loadCaddyfileSnippet(m.File, m.Line); err == nil {
-			m.Source = src
-			m.SourceLineStart = lineStart
+	m.Key = configKey(s.file, s.line)
+
+	if s.file != "" {
+		if src, lineStart, err := loadCaddyfileSnippet(s.file, s.line); err == nil {
+			s.source = src
+			s.sourceLineStart = lineStart
 		}
+
+		configMap.set(m.Key, s)
 	}
 
 	return nil
@@ -158,6 +162,17 @@ func loadCaddyfileSnippet(file string, line int) (snippet []string, firstLine in
 	}
 
 	return lines[start:end], start + 1, nil
+}
+
+type snippetDetails struct {
+	file            string
+	line            int
+	source          []string
+	sourceLineStart int // for lack of a better name
+}
+
+func (c snippetDetails) valid() bool {
+	return c.file != "" && c.line > 0
 }
 
 // Interface guards
