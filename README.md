@@ -1,4 +1,4 @@
-# Caddy Inspect
+# caddy-inspect
 
 ## Inspect HTTP requests in Caddy
 
@@ -63,6 +63,10 @@ Any HTTP request(s) made to a route containing the `inspect` keyword would pause
 - The information displayed are read-only and cannot be modified.
 - HTTP request and response bodies cannot be inspected. It is a deliberate limitation until there is a strong argument in favour.
 - The plugin stemmed from a personal use-case. Feedbacks would be appreciated to accommodate more use-cases.
+
+## Attribution
+
+The Caddy logo is a trademark of Caddy Web Server.
 
 ## License
 
