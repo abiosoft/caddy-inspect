@@ -303,5 +303,6 @@
 
     .line-content {
         white-space: pre;
+        width: 200px;
     }
 </style>
