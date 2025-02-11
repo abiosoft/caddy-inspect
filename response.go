@@ -24,8 +24,8 @@ type Response struct {
 		Password string `json:"password,omitempty"`
 	} `json:"basic_auth,omitempty"`
 	Cookies          []*http.Cookie `json:"cookies,omitempty"`
-	ContextVariables map[string]any `json:"context_variables,omitempty"`
 	Error            any            `json:"error,omitempty"`
+	ContextVariables map[string]any `json:"context_variables,omitempty"`
 	ContextModules   []string       `json:"context_modules,omitempty"`
 	LoadedModules    []string       `json:"loaded_modules,omitempty"`
 	Caddyfile        *struct {
@@ -74,7 +74,12 @@ func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Resp
 			Line            int      `json:"line,omitempty"`
 			Source          []string `json:"source,omitempty"`
 			SourceLineStart int      `json:"source_line_start,omitempty"`
-		}{File: m.File, Line: m.Line, Source: m.Source, SourceLineStart: m.SourceLineStart}
+		}{
+			File:            m.File,
+			Line:            m.Line,
+			Source:          m.Source,
+			SourceLineStart: m.SourceLineStart,
+		}
 	}
 
 	vars, _ := r.Context().Value(caddyhttp.VarsCtxKey).(map[string]any)
