@@ -22,7 +22,7 @@ func init() {
 
 var errRequestTerminated = errors.New("request terminated")
 
-// Middleware implements an HTTP handler that writes the
+// Middleware implements an HTTP handler that
 // inspects the current request.
 type Middleware struct {
 	logger *zap.Logger
