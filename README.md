@@ -46,7 +46,7 @@ caddy run --watch
 Open http://localhost:2020 in the browser to access Caddy Inspect.
 
 > [!NOTE]
-> Another port would be auto-assigned if `2020` is not available.
+> Another port would be assigned if `2020` is not available.
 > The URL can be confirmed in the Caddy logs.
 
 ### Enjoy
