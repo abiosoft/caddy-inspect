@@ -56,9 +56,9 @@ Any HTTP request(s) made to a route containing the `inspect` keyword would pause
 ## Caveats
 
 > [!CAUTION]
-> This plugin is intended for development purposes only, sensitive information may be exposed if used in production environment.
+> This plugin is intended for development purposes only, sensitive information may be exposed if used in a production environment.
 
-- The plugin is tailored towards Caddyfile. However, JSON config can be used with limited experience.
+- The plugin is tailored towards Caddyfile config. However, JSON config can be used with limited experience.
 - The information displayed are read-only and cannot be modified.
 - HTTP request and response bodies cannot be inspected. It is a deliberate limitation until there is a strong argument in favour.
 - The plugin stemmed from a personal use-case. Feedbacks would be appreciated to accommodate more use-cases.
