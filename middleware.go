@@ -73,18 +73,18 @@ func (m *Middleware) Validate() error {
 func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
 	logger := m.logger.With(zap.String("file", m.file), zap.Int("line", m.line))
 
-	logger.Debug("inspecting")
+	logger.Info("inspecting")
 
 	server := getServerInstance()
 	action := server.handle(m, nil, r)
 
 	switch action {
 	case requestActionResume:
-		logger.Debug("resumed")
+		logger.Info("resumed")
 		return next.ServeHTTP(w, r)
 
 	case requestActionStep:
-		logger.Debug("proceeding to response")
+		logger.Info("proceeding to response")
 
 		// process middleware chain
 		err := next.ServeHTTP(w, r)
@@ -101,7 +101,7 @@ func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddy
 		// request stopped
 		fallthrough
 	case requestActionStop:
-		logger.Debug("stopped")
+		logger.Info("stopped")
 	}
 
 	return caddyhttp.Error(http.StatusServiceUnavailable, errRequestTerminated)
