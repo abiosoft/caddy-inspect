@@ -23,12 +23,15 @@ type Response struct {
 		Username string `json:"username,omitempty"`
 		Password string `json:"password,omitempty"`
 	} `json:"basic_auth,omitempty"`
-	Cookies          []*http.Cookie `json:"cookies,omitempty"`
-	Error            any            `json:"error,omitempty"`
-	ContextVariables map[string]any `json:"context_variables,omitempty"`
-	ContextModules   []string       `json:"context_modules,omitempty"`
-	LoadedModules    []string       `json:"loaded_modules,omitempty"`
-	Caddyfile        *struct {
+	Cookies      []*http.Cookie `json:"cookies,omitempty"`
+	CaddyVersion string         `json:"caddy_version,omitempty"`
+	CaddyContext struct {
+		Variables map[string]any `json:"Variables,omitempty"`
+		Modules   []string       `json:"Modules,omitempty"`
+		Error     any            `json:"Error,omitempty"`
+	} `json:"caddy_context,omitempty"`
+	CaddyModules []string `json:"caddy_modules,omitempty"`
+	Caddyfile    *struct {
 		File            string   `json:"file,omitempty"`
 		Line            int      `json:"line,omitempty"`
 		Source          []string `json:"source,omitempty"`
@@ -63,10 +66,12 @@ func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Resp
 		}{Username: username, Password: password}
 	}
 
-	d.LoadedModules = caddy.Modules()
+	d.CaddyModules = caddy.Modules()
 	for _, m := range m.ctx.Modules() {
-		d.ContextModules = append(d.ContextModules, m.CaddyModule().String())
+		d.CaddyContext.Modules = append(d.CaddyContext.Modules, m.CaddyModule().String())
 	}
+
+	_, d.CaddyVersion = caddy.Version()
 
 	if m.File != "" && m.Line > 0 {
 		d.Caddyfile = &struct {
@@ -83,10 +88,10 @@ func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Resp
 	}
 
 	vars, _ := r.Context().Value(caddyhttp.VarsCtxKey).(map[string]any)
-	d.ContextVariables = vars
+	d.CaddyContext.Variables = vars
 
 	if err, _ := r.Context().Value(caddyhttp.ErrorCtxKey).(error); err != nil {
-		d.Error = err.Error()
+		d.CaddyContext.Error = err.Error()
 
 		// if it is an handler error, set specific error
 		if err, ok := err.(caddyhttp.HandlerError); ok {
@@ -94,7 +99,7 @@ func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Resp
 			if err := err.Err; err != nil {
 				herr.Err = err.Error()
 			}
-			d.Error = herr
+			d.CaddyContext.Error = herr
 		}
 	}
 
