@@ -5,4 +5,5 @@ build:
 
 .PHONY: frontend
 frontend:
-	cd frontend && rm -rf dist && npm run build && cp -R dist/. ../static
+	cd frontend && rm -rf dist && npm run build
+	rm -rf static/assets && cp -R frontend/dist/. static
