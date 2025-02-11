@@ -59,6 +59,7 @@ Any HTTP request(s) made to a route containing the `inspect` keyword would pause
 > This plugin is intended for development purposes only, sensitive information may be exposed if used in a production environment.
 
 - The plugin is tailored towards Caddyfile config. However, JSON config can be used with limited experience.
+- Due to the in-built [order of directives](https://caddyserver.com/docs/caddyfile/directives#directive-order) in Caddy, `inspect` is more predictable in a `route` block. Otherwise, it is ordered after the `encode` directive.
 - The information displayed are read-only and cannot be modified.
 - HTTP request and response bodies cannot be inspected. It is a deliberate limitation until there is a strong argument in favour.
 - The plugin stemmed from a personal use-case. Feedbacks would be appreciated to accommodate more use-cases.
