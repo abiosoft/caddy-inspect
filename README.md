@@ -41,7 +41,7 @@ Caddy can be started with the `--watch` flag to autoreload the Caddyfile on each
 caddy run --watch
 ```
 
-### Access the Inspect dashboard
+### Access the Inspect console
 
 Open http://localhost:2020 in the browser to access Caddy Inspect.
 
@@ -51,7 +51,7 @@ Open http://localhost:2020 in the browser to access Caddy Inspect.
 
 ### Enjoy
 
-Any HTTP request(s) made to a route containing the `inspect` keyword would pause the request and activate the dashboard.
+Any HTTP request(s) made to a route containing the `inspect` keyword would pause the request and activate the console.
 
 ## Caveats
 
