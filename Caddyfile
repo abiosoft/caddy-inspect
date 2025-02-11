@@ -1,7 +1,4 @@
 # example Caddyfile for debugging purposes
-{
-	# debug
-}
 
 :8888
 
