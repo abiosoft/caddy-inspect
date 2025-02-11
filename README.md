@@ -2,7 +2,7 @@
 
 ## Inspect HTTP requests in Caddy
 
-![Demonstration](inspect.gif)
+![Screenshot](screenshot.png)
 
 ## Features
 
