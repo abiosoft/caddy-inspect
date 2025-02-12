@@ -1,6 +1,8 @@
 # caddy-inspect
 
-## Inspect HTTP requests in Caddy
+The Inspect plugin provides an easy way to inspect HTTP requests in Caddy.
+
+The Caddyfile is already easy to write. The Inspect plugin takes it a step further by allowing you to place breakpoints in the Caddyfile and ascertain the behaviour of Caddy.
 
 ![Screenshot](screenshot.png)
 
