@@ -303,6 +303,7 @@
 
     .line-content {
         white-space: pre;
+        tab-size: 4;
         width: 200px;
     }
 </style>
