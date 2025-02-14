@@ -73,3 +73,7 @@ The Caddy logo is a trademark of Caddy Web Server.
 ## License
 
 MIT
+
+## Sponsoring
+
+You can support the author by donating on [Github Sponsors](https://github.com/sponsors/abiosoft) or [Buy me a coffee](https://www.buymeacoffee.com/abiosoft).
