@@ -1,7 +1,9 @@
 package inspect
 
 import (
+	"fmt"
 	"net/http"
+	"runtime"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
@@ -37,6 +39,7 @@ type Response struct {
 		Source          []string `json:"source,omitempty"`
 		SourceLineStart int      `json:"source_line_start,omitempty"`
 	} `json:"caddyfile,omitempty"`
+	MemoryUsage  string `json:"memory_usage,omitempty"`
 	responseMode bool
 }
 
@@ -103,10 +106,23 @@ func buildResponse(m Middleware, w http.ResponseWriter, r *http.Request) (d Resp
 		}
 	}
 
+	d.MemoryUsage = getMemUsage().String()
+
 	return
 }
 
 type handlerErr struct {
 	Err string
 	caddyhttp.HandlerError
+}
+
+type memNum uint64
+
+func (m memNum) String() string { return fmt.Sprintf("%d MiB", m/1024/1024) }
+
+func getMemUsage() memNum {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	return memNum(m.Sys)
 }
